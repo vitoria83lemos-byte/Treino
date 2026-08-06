@@ -213,6 +213,36 @@ textarea.exp{
   box-shadow:0 5px 18px rgba(0,0,0,.42)
 }
 .rest.idle{background:var(--slate-2);color:var(--muted);border:1px solid var(--line)}
+.rrow{padding:12px 0;border-top:1px solid var(--line)}
+.rrow:first-child{border-top:none;padding-top:2px}
+.rname{font-size:14px;margin-bottom:8px;display:flex;gap:9px;align-items:center}
+.rrow.filled .rname .txt{color:var(--green)}
+.rcells{display:flex;gap:4px}
+.rcell{flex:1;min-width:0;display:flex;flex-direction:column}
+.rlab{
+  text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  color:var(--amber);margin-bottom:4px;height:14px;line-height:14px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden
+}
+.rlab.top{color:var(--amber);font-weight:600}
+.rlab.bw{color:var(--muted)}
+.rlab.none{color:transparent}
+.rin{
+  width:100%;padding:11px 2px;text-align:center;
+  background:var(--slate-2);border:1px solid var(--line);border-radius:7px;
+  color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:15px;
+  font-variant-numeric:tabular-nums;-moz-appearance:textfield
+}
+.rin::-webkit-outer-spin-button,.rin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.rin:focus{outline:none;border-color:var(--blue);background:var(--slate)}
+.rin::placeholder{color:#48545F;font-size:12px}
+.rin.last{border-color:var(--amber-dim)}
+.rin.last:focus{border-color:var(--amber)}
+.rhead{display:flex;gap:4px;margin-bottom:6px}
+.rhead span{
+  flex:1;text-align:center;font-size:9px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);font-weight:600
+}
 .exb{padding:11px 0;border-top:1px solid var(--line)}
 .exb:first-child{border-top:none;padding-top:2px}
 .exh{display:flex;gap:9px;align-items:center;margin-bottom:8px}
@@ -255,6 +285,11 @@ textarea.exp{
 
 <!-- ============ HOME ============ -->
 <section id="vHome">
+  <div id="backupWarn" class="hide" style="background:rgba(240,160,44,.1);border:1px solid var(--amber-dim);border-radius:var(--r);padding:13px 14px;margin-bottom:13px">
+    <div class="eyebrow" style="color:var(--amber)">Cópia de segurança</div>
+    <p class="note" id="backupMsg" style="margin:0 0 10px;color:var(--paper)"></p>
+    <button class="btn sm" id="warnShare">Guardar cópia agora</button>
+  </div>
   <div class="hero">
     <div class="eyebrow">Próxima sessão</div>
     <div class="name" id="nextName">—</div>
@@ -301,6 +336,11 @@ textarea.exp{
     </div>
   </details>
 
+  <details class="fold card" id="neckFold" open>
+    <summary>Pescoço <span class="tag" id="neckTag"></span></summary>
+    <div class="body" id="neckList"></div>
+  </details>
+
   <div class="card" style="border-color:var(--blue)">
     <div class="eyebrow" style="color:var(--blue)">Observações</div>
     <p class="note" style="margin:0 0 10px">Como correu, sensações, dores, sono, o que mudar da próxima.</p>
@@ -336,7 +376,45 @@ textarea.exp{
     <div class="field"><label>Chin-up — peso adicionado (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmChin"></div>
     <div class="field"><label>Dip — peso adicionado (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmDip"></div>
     <div class="field"><label>Press vertical (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmPress"></div>
+    <div class="field"><label>Row horizontal (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmRow"></div>
+    <div class="field"><label>Captain of Crush — nível atual</label>
+      <select class="inline-in" id="tmCoC">
+        <option value="">—</option>
+        <option>Guide (60 lb)</option>
+        <option>Sport (80 lb)</option>
+        <option>Trainer (100 lb)</option>
+        <option>No. 0.5 (120 lb)</option>
+        <option>No. 1 (140 lb)</option>
+        <option>No. 1.5 (167.5 lb)</option>
+        <option>No. 2 (195 lb)</option>
+        <option>No. 2.5 (237.5 lb)</option>
+        <option>No. 3 (280 lb)</option>
+        <option>No. 3.5 (322.5 lb)</option>
+        <option>No. 4 (365 lb)</option>
+      </select>
+    </div>
     <button class="btn sm" id="saveSet">Guardar</button>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Cópia de segurança</div>
+    <p class="note" style="margin:0 0 10px" id="lastBackupTxt"></p>
+    <button class="btn sm" id="shareBtn">Partilhar cópia</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost sm" id="dlBtn">Descarregar ficheiro</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost sm" id="restoreBtn">Restaurar de ficheiro</button>
+    <input type="file" id="restoreIn" accept=".json,application/json" class="hide">
+    <div style="height:12px"></div>
+    <div class="field" style="margin:0">
+      <label>Lembrar-me a cada</label>
+      <select class="inline-in" id="bkFreq">
+        <option value="7">7 dias</option>
+        <option value="14">14 dias</option>
+        <option value="30">30 dias</option>
+        <option value="0">Nunca</option>
+      </select>
+    </div>
   </div>
 
   <div class="card">
@@ -397,9 +475,15 @@ const SESSIONS = [
     circuit:["Reverse nordic curls","Front rack lunges","Ab wheel","Reverse hyper","Copenhagen hold","Suitcase carry"] },
 
   { id:"press", name:"Press + Row", warm:WU_PRESS,
-    main:{type:"press", lift:"Press vertical", tm:"tmPress"},
+    main:{type:"grid", items:[
+      {name:"Landmine press", tm:"tmPress"},
+      {name:"Row horizontal", tm:"tmRow"},
+      {name:"Captain of Crush", coc:true}
+    ]},
     circuit:["Wall walks com hold","Face pulls com peso","Front lever rows (1 anel)","Pelican curls","Leg raises"] }
 ];
+
+const NECK = ["Isométrico — flexão, 10 s","Isométrico — extensão, 10 s","Isométrico — lateral direita, 10 s","Isométrico — lateral esquerda, 10 s","Chin tucks — 3×10 lentos"];
 
 const CARDIO = { id:"z2", name:"Zona 2 — Air Bike" };
 
@@ -498,6 +582,8 @@ function render(){
     dial.appendChild(p);
   });
 
+  checkBackup();
+
   const rec = DB.log.slice(-4).reverse();
   $("homeRecent").innerHTML = rec.length ? rec.map(l=>`
     <div class="hrow"><div class="d mono">${dstr(l.date)}</div>
@@ -518,6 +604,7 @@ function begin(idx){
   const s = SESSIONS[idx];
   document.querySelector("#vSession .fold").classList.remove("hide");
   $("circFold").classList.remove("hide");
+  $("neckFold").classList.remove("hide");
   cur = { sid:s.id, idx, name:s.name, date:new Date().toISOString(),
           warm:[], circ:[], rounds:0, notes:"", main:{} };
   $("sName").textContent = s.name;
@@ -534,38 +621,16 @@ function begin(idx){
 
   buildMain(s);
 
-  // circuito — peso + reps por volta
-  $("circTag").textContent = s.circuit.length+" estações";
-  $("circList").innerHTML =
-    `<div class="exlab"><span class="kg">Peso</span><span>V1</span><span>V2</span><span>V3</span><span>V4</span></div>`
-    + s.circuit.map((c,i)=>`
-      <div class="exb" data-i="${i}">
-        <div class="exh"><span class="n mono">${String(i+1).padStart(2,'0')}</span><span class="exn">${c}</span></div>
-        <div class="exg">
-          <input class="cin kg" type="number" inputmode="decimal" step="0.5" placeholder="kg" data-i="${i}">
-          ${[0,1,2,3].map(r=>`<input class="cin rp" type="number" inputmode="numeric" placeholder="—" data-i="${i}" data-r="${r}">`).join("")}
-        </div>
-      </div>`).join("");
+  // circuito
+  cur.collectCirc = buildGrid($("circList"), s.circuit, $("circTag"));
 
-  const refreshCirc = ()=>{
-    let done=0;
-    $("circList").querySelectorAll(".exb").forEach(b=>{
-      const any = [...b.querySelectorAll(".rp")].some(x=>x.value!=="");
-      b.classList.toggle("filled", any);
-      if(any) done++;
-    });
-    $("circTag").textContent = done+"/"+s.circuit.length+" estações";
-  };
-  $("circList").querySelectorAll(".cin").forEach(inp=>inp.oninput=refreshCirc);
-
-  // pré-preencher pesos da última vez que cada estação foi registada
-  s.circuit.forEach((name,i)=>{
-    for(let k=DB.log.length-1;k>=0;k--){
-      const prev = DB.log[k];
-      if(!prev.circData) continue;
-      const hit = prev.circData.find(x=>x.name===name && x.kg!==null && x.kg!==undefined);
-      if(hit){ $("circList").querySelector(`.exb[data-i="${i}"] .kg`).value = hit.kg; break; }
-    }
+  // rotina cervical
+  $("neckTag").textContent = "0/"+NECK.length;
+  $("neckList").innerHTML = NECK.map((w,i)=>
+    `<div class="chk" data-i="${i}"><span class="n mono">${String(i+1).padStart(2,'0')}</span><div class="box"></div><span>${w}</span></div>`).join("");
+  $("neckList").querySelectorAll(".chk").forEach(el=>el.onclick=()=>{
+    el.classList.toggle("on");
+    $("neckTag").textContent = $("neckList").querySelectorAll(".chk.on").length+"/"+NECK.length;
   });
 
   $("rounds").innerHTML = [1,2,3,4].map(n=>`<button data-n="${n}">${n}</button>`).join("");
@@ -586,6 +651,7 @@ function beginCardio(){
   // sem aquecimento nem circuito neste registo
   document.querySelector("#vSession .fold").classList.add("hide");
   $("circFold").classList.add("hide");
+  $("neckFold").classList.add("hide");
 
   const box=$("mainBlock"); box.innerHTML="";
 
@@ -645,6 +711,84 @@ function readDateField(){
   return new Date(y,m-1,d,now.getHours(),now.getMinutes()).toISOString();
 }
 
+/* Tabela de circuitos com carga por volta.
+   rows = [{name, loads:[5 etiquetas ou null]}] */
+function buildRampGrid(el, rows){
+  el.innerHTML =
+    `<div class="rhead">${[1,2,3,4,5].map(n=>`<span>V${n}</span>`).join("")}</div>`
+    + rows.map((r,i)=>`
+      <div class="rrow" data-i="${i}">
+        <div class="rname"><span class="n mono">${String(i+1).padStart(2,'0')}</span><span class="txt">${r.name}</span></div>
+        <div class="rcells">
+          ${r.loads.map((L,j)=>{
+            const cls = L===null ? "none" : (L==="BW" ? "bw" : (j===4 ? "top" : ""));
+            return `<div class="rcell">
+              <div class="rlab ${cls}">${L===null?"·":L}</div>
+              <input class="rin${j===4?" last":""}" type="number" inputmode="numeric" placeholder="—" data-i="${i}" data-r="${j}">
+            </div>`;
+          }).join("")}
+        </div>
+      </div>`).join("");
+
+  const refresh = ()=>{
+    el.querySelectorAll(".rrow").forEach(b=>{
+      b.classList.toggle("filled", [...b.querySelectorAll(".rin")].some(x=>x.value!==""));
+    });
+  };
+  el.querySelectorAll(".rin").forEach(inp=>inp.oninput=refresh);
+
+  return ()=> rows.map((r,i)=>{
+    const box = el.querySelector(`.rrow[data-i="${i}"]`);
+    const reps = [...box.querySelectorAll(".rin")].map(x=>x.value===""?null:parseInt(x.value));
+    return { name:r.name, loads:r.loads, reps };
+  });
+}
+
+/* Grelha genérica: peso + reps por volta. Usada no circuito,
+   no circuito principal do dia 4 e no Captain of Crush. */
+function buildGrid(el, items, tagEl, onCount){
+  el.innerHTML =
+    `<div class="exlab"><span class="kg">Peso</span><span>V1</span><span>V2</span><span>V3</span><span>V4</span></div>`
+    + items.map((c,i)=>`
+      <div class="exb" data-i="${i}">
+        <div class="exh"><span class="n mono">${String(i+1).padStart(2,'0')}</span><span class="exn">${c}</span></div>
+        <div class="exg">
+          <input class="cin kg" type="number" inputmode="decimal" step="0.5" placeholder="kg" data-i="${i}">
+          ${[0,1,2,3].map(r=>`<input class="cin rp" type="number" inputmode="numeric" placeholder="—" data-i="${i}" data-r="${r}">`).join("")}
+        </div>
+      </div>`).join("");
+
+  const refresh = ()=>{
+    let done=0;
+    el.querySelectorAll(".exb").forEach(b=>{
+      const any = [...b.querySelectorAll(".rp")].some(x=>x.value!=="");
+      b.classList.toggle("filled", any);
+      if(any) done++;
+    });
+    if(tagEl) tagEl.textContent = done+"/"+items.length+" estações";
+    if(onCount) onCount(done);
+  };
+  el.querySelectorAll(".cin").forEach(inp=>inp.oninput=refresh);
+  refresh();
+
+  // pré-preencher pesos da última vez que cada estação foi registada
+  items.forEach((name,i)=>{
+    for(let k=DB.log.length-1;k>=0;k--){
+      const prev = DB.log[k];
+      const pool = [].concat(prev.circData||[], prev.mainGrid||[], prev.coc||[]);
+      const hit = pool.find(x=>x.name===name && x.kg!==null && x.kg!==undefined);
+      if(hit){ el.querySelector(`.exb[data-i="${i}"] .kg`).value = hit.kg; break; }
+    }
+  });
+
+  return ()=> items.map((name,i)=>{
+    const box = el.querySelector(`.exb[data-i="${i}"]`);
+    const kgv = box.querySelector(".kg").value;
+    const reps = [...box.querySelectorAll(".rp")].map(x=>x.value===""?null:parseInt(x.value));
+    return { name, kg: kgv===""?null:parseFloat(kgv), reps };
+  });
+}
+
 function stepper(label,val,minv,stepv,cb,unit){
   const d=document.createElement("div");
   d.className="step";
@@ -695,58 +839,53 @@ function buildMain(s){
   }
 
   if(m.type==="pair"){
-    cur.main = {pair:true, sets:[]};
-    m.lifts.forEach(l=>{
+    cur.main = {ramp:true};
+    const bwPct = [null,25,50,75,100];   // V1 = peso corporal
+    const rows = m.lifts.map(l=>{
       const tm = DB.tm[l.tm]||0;
-      const nSets = tm<10 ? 3 : 4;
-      const steps = nSets===3 ? [0,50,100] : [0,33,66,100];
-      const repScheme = nSets===3 ? [5,3,2] : [5,3,2,1];
-      const entry = {label:l.label, tm, topReps:1, topKg:tm};
-      cur.main.sets.push(entry);
-
-      const c=document.createElement("div"); c.className="card";
-      c.innerHTML=`<div class="eyebrow">${l.label} — aproximação</div>
-        <table class="ramp"><thead><tr><th>Carga</th><th>Reps</th></tr></thead><tbody>
-        ${steps.map((p,i)=>`<tr data-i="${i}"><td>${fmt(round(tm*p/100))} kg</td><td>${repScheme[i]}</td></tr>`).join("")}
-        </tbody></table>`;
-      c.querySelectorAll("tbody tr").forEach(r=>r.onclick=()=>r.classList.toggle("done"));
-      box.appendChild(c);
-
-      const t=document.createElement("div"); t.className="topset";
-      const prev = DB.log.filter(x=>x.sid===s.id).slice(-1)[0];
-      const pv = prev && prev.main && prev.main.sets ? (prev.main.sets.find(x=>x.label===l.label)||{}) : {};
-      t.innerHTML=`<div class="eyebrow">${l.label} — top set</div>
-        <div class="target"><span>${pv.topKg!==undefined?"Sessão anterior":"Sem referência"}</span><b>${pv.topKg!==undefined?fmt(pv.topKg)+" kg × "+pv.topReps:"—"}</b></div>`;
-      const w1=document.createElement("div"); w1.appendChild(stepper("kg", tm, 0, 2.5, v=>entry.topKg=v, true));
-      const sp=document.createElement("div"); sp.style.height="10px";
-      const w2=document.createElement("div"); w2.appendChild(stepper("reps", 1, 1, 1, v=>entry.topReps=v));
-      t.appendChild(w1); t.appendChild(sp); t.appendChild(w2);
-      box.appendChild(t);
+      return { name:l.label, loads: bwPct.map(p=> p===null ? "BW" : "+"+fmt(round(tm*p/100))) };
     });
-    const cc=document.createElement("div"); cc.className="card";
-    cc.innerHTML=`<div class="eyebrow">Captain of Crush</div><p class="note" style="margin:0">Fecha cada volta. Chin-up → 1 min → Dip → 1 min → CoC → 1 min.</p>`;
-    box.appendChild(cc);
+    rows.push({ name:"Captain of Crush", loads:[null,null,null,null,null] });
+
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`<div class="eyebrow">Circuito principal${DB.tm.tmCoC?" · CoC "+DB.tm.tmCoC:""}</div>
+      <p class="note" style="margin:0 0 12px">Chin-up → 1 min → Dip → 1 min → CoC → 1 min. V5 é o set de trabalho.</p>
+      <div id="mainGridEl"></div>`;
+    box.appendChild(c);
+    cur.collectMainGrid = buildRampGrid($("mainGridEl"), rows);
+
+    const prev = DB.log.filter(x=>x.sid===s.id).slice(-1)[0];
+    if(prev && prev.topTxt){
+      const p=document.createElement("div"); p.className="topset";
+      p.innerHTML=`<div class="eyebrow">Sessão anterior — V5</div>
+        <div class="target" style="border:none;padding-bottom:0;margin-bottom:0"><b>${prev.topTxt}</b></div>`;
+      box.appendChild(p);
+    }
   }
 
-  if(m.type==="press"){
-    const tm = DB.tm[m.tm]||0;
-    cur.main = {press:true, kg:tm, reps:8, rowKg:0, rowReps:10, phase:"Landmine press"};
-    const c=document.createElement("div"); c.className="card";
-    c.innerHTML=`<div class="eyebrow">Press vertical</div>
-      <p class="note" style="margin:0 0 12px">Fase 1: landmine 3×8-10 · Fase 2: halteres/barra 5-8 reps · Fase 3: rampa + top set</p>`;
-    const w1=document.createElement("div"); w1.appendChild(stepper("kg", tm, 0, 2.5, v=>cur.main.kg=v, true));
-    const sp=document.createElement("div"); sp.style.height="10px";
-    const w2=document.createElement("div"); w2.appendChild(stepper("reps", 8, 1, 1, v=>cur.main.reps=v));
-    c.appendChild(w1); c.appendChild(sp); c.appendChild(w2);
-    box.appendChild(c);
+  if(m.type==="grid"){
+    cur.main = {ramp:true};
+    const pct = [50,60,70,80,90];
+    const rows = m.items.map(it=>{
+      if(it.coc) return { name:it.name, loads:[null,null,null,null,null] };
+      const tm = DB.tm[it.tm]||0;
+      return { name:it.name, loads: pct.map(p=> tm ? fmt(round(tm*p/100)) : p+"%") };
+    });
 
-    const r=document.createElement("div"); r.className="card";
-    r.innerHTML=`<div class="eyebrow">Row horizontal</div><p class="note" style="margin:0 0 12px">3×8-12</p>`;
-    const w3=document.createElement("div"); w3.appendChild(stepper("kg", 0, 0, 2.5, v=>cur.main.rowKg=v, true));
-    const sp2=document.createElement("div"); sp2.style.height="10px";
-    const w4=document.createElement("div"); w4.appendChild(stepper("reps", 10, 1, 1, v=>cur.main.rowReps=v));
-    r.appendChild(w3); r.appendChild(sp2); r.appendChild(w4);
-    box.appendChild(r);
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`<div class="eyebrow">Circuito principal${DB.tm.tmCoC?" · CoC "+DB.tm.tmCoC:""}</div>
+      <p class="note" style="margin:0 0 12px">Press → row → CoC, e nova volta. V5 a 90% do máximo de treino.</p>
+      <div id="mainGridEl"></div>`;
+    box.appendChild(c);
+    cur.collectMainGrid = buildRampGrid($("mainGridEl"), rows);
+
+    const prev = DB.log.filter(x=>x.sid===s.id).slice(-1)[0];
+    if(prev && prev.topTxt){
+      const p=document.createElement("div"); p.className="topset";
+      p.innerHTML=`<div class="eyebrow">Sessão anterior — V5</div>
+        <div class="target" style="border:none;padding-bottom:0;margin-bottom:0"><b>${prev.topTxt}</b></div>`;
+      box.appendChild(p);
+    }
   }
 }
 
@@ -766,20 +905,27 @@ $("saveBtn").onclick = async ()=>{
   }
   const s = SESSIONS[cur.idx];
   cur.warm = [...$("wuList").querySelectorAll(".chk")].map((e,i)=>e.classList.contains("on")?s.warm[i]:null).filter(Boolean);
+  cur.neck = [...$("neckList").querySelectorAll(".chk")].map((e,i)=>e.classList.contains("on")?NECK[i]:null).filter(Boolean);
 
-  cur.circData = s.circuit.map((name,i)=>{
-    const box = $("circList").querySelector(`.exb[data-i="${i}"]`);
-    const kgv = box.querySelector(".kg").value;
-    const reps = [...box.querySelectorAll(".rp")].map(x=>x.value===""?null:parseInt(x.value));
-    return { name, kg: kgv===""?null:parseFloat(kgv), reps };
-  });
+  cur.circData = cur.collectCirc ? cur.collectCirc() : [];
+  cur.mainGrid = cur.collectMainGrid ? cur.collectMainGrid() : null;
+  cur.coc      = cur.collectCoC ? cur.collectCoC() : null;
+  delete cur.collectCirc; delete cur.collectMainGrid; delete cur.collectCoC;
+
   cur.circ = cur.circData.filter(x=>x.reps.some(r=>r!==null)).map(x=>x.name);
   cur.notes = nt.notes; cur.tags = nt.tags;
   cur.date = readDateField();
 
-  if(cur.main.pair)      cur.topTxt = cur.main.sets.map(x=>fmt(x.topKg)+"×"+x.topReps).join(" / ");
-  else if(cur.main.press)cur.topTxt = fmt(cur.main.kg)+" kg × "+cur.main.reps;
-  else                   cur.topTxt = fmt(cur.main.topKg)+" kg × "+cur.main.topReps;
+  if(cur.main.ramp){
+    const g = cur.mainGrid||[];
+    const bits = g.filter(x=>x.reps[4]!==null).map(x=>{
+      const L = x.loads[4];
+      return x.name.split(" ")[0]+" "+(L?L+" ":"")+"×"+x.reps[4];
+    });
+    cur.topTxt = bits.length ? bits.join(" / ") : "—";
+  } else {
+    cur.topTxt = fmt(cur.main.topKg)+" kg × "+cur.main.topReps;
+  }
 
   DB.log.push(cur);
   DB.log.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -807,7 +953,10 @@ function renderHist(){
       alert(`${l.name}\n${new Date(l.date).toLocaleDateString('pt-PT',{dateStyle:'long'})}\n\nContínuo: ${l.min} min\nBloco de intensidade: ${l.sprints?l.sprintMin+" min (no fim)":"não"}${tg}\n\n${l.notes||"(sem observações)"}`);
       return;
     }
-    alert(`${l.name}\n${new Date(l.date).toLocaleDateString('pt-PT',{dateStyle:'long'})}\n\nTop set: ${l.topTxt}\n\nCIRCUITO\n${circTxt(l)}\n\nAquecimento: ${l.warm.length} itens${tg}\n\n${l.notes||"(sem observações)"}`);
+    const head = l.mainGrid ? "PRINCIPAL\n"+gridTxt(l.mainGrid) : "Top set: "+l.topTxt;
+    const coc = l.coc ? "\n\nCAPTAIN OF CRUSH\n"+gridTxt(l.coc) : "";
+    const nk = "\n\nPescoço: "+((l.neck&&l.neck.length)?l.neck.length+"/5":"não registado");
+    alert(`${l.name}\n${new Date(l.date).toLocaleDateString('pt-PT',{dateStyle:'long'})}\n\n${head}${coc}\n\nCIRCUITO\n${circTxt(l)}${nk}${tg}\n\n${l.notes||"(sem observações)"}`);
   });
 
   const byS = {};
@@ -825,7 +974,13 @@ function renderHist(){
 
 /* ══════════════ DEFINIÇÕES ══════════════ */
 function renderSet(){
-  ["tmSquat","tmDead","tmChin","tmDip","tmPress"].forEach(k=>$(k).value = DB.tm[k]||"");
+  ["tmSquat","tmDead","tmChin","tmDip","tmPress","tmRow"].forEach(k=>$(k).value = DB.tm[k]||"");
+  $("tmCoC").value = DB.tm.tmCoC || "";
+  $("bkFreq").value = (DB.bkFreq===undefined?14:DB.bkFreq);
+  const d = daysSinceBackup();
+  $("lastBackupTxt").textContent = d===null
+    ? "Sem cópias guardadas. Os registos existem só neste dispositivo."
+    : "Última cópia: há "+(d===0?"menos de um dia":d+" dias")+".";
   $("cycPick").innerHTML = SESSIONS.map((s,i)=>
     `<button class="btn ghost sm" data-i="${i}" style="flex:1 1 46%;${i===DB.cycle?'border-color:var(--amber);color:var(--amber)':''}">${s.name}</button>`).join("");
   $("cycPick").querySelectorAll("button").forEach(b=>b.onclick=async()=>{
@@ -833,20 +988,115 @@ function renderSet(){
   });
 }
 $("saveSet").onclick = async ()=>{
-  ["tmSquat","tmDead","tmChin","tmDip","tmPress"].forEach(k=>DB.tm[k]=parseFloat($(k).value)||0);
+  ["tmSquat","tmDead","tmChin","tmDip","tmPress","tmRow"].forEach(k=>DB.tm[k]=parseFloat($(k).value)||0);
+  DB.tm.tmCoC = $("tmCoC").value;
   await save(); render(); toast("Máximos guardados");
 };
 
-function circTxt(l){
-  if(!l.circData || !l.circData.length) return "  (sem registo)";
-  const rows = l.circData.filter(x=>x.reps.some(r=>r!==null) || x.kg!==null);
+function gridTxt(arr){
+  if(!arr || !arr.length) return "  (sem registo)";
+  const rows = arr.filter(x=>x.reps.some(r=>r!==null) || (x.kg!==null&&x.kg!==undefined));
   if(!rows.length) return "  (sem registo)";
   return rows.map(x=>{
+    if(x.loads){
+      const cells = x.reps.map((r,i)=>{
+        if(r===null) return null;
+        const L=x.loads[i];
+        return (L?L+"×":"")+r;
+      }).filter(Boolean);
+      return "  "+x.name+":  "+(cells.join("  ")||"—");
+    }
     const reps = x.reps.filter(r=>r!==null).join("/") || "—";
     const kg = (x.kg!==null && x.kg!==undefined && x.kg!==0) ? "  "+fmt(x.kg)+" kg" : "";
     return "  "+x.name+":"+kg+"  "+reps;
   }).join("\n");
 }
+function circTxt(l){ return gridTxt(l.circData); }
+
+/* ══════════════ CÓPIA DE SEGURANÇA ══════════════ */
+function stamp(){
+  const d=new Date();
+  return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+}
+function backupBlob(){
+  const payload = { app:"diario-treino", version:1, exported:new Date().toISOString(), data:DB };
+  return new Blob([JSON.stringify(payload,null,1)],{type:"application/json"});
+}
+async function markBackup(){
+  DB.lastBackup = new Date().toISOString();
+  await save(); render(); if(!$("vSet").classList.contains("hide")) renderSet();
+}
+
+async function doShare(){
+  const blob = backupBlob();
+  const file = new File([blob], "diario-treino-"+stamp()+".json", {type:"application/json"});
+  const txt = buildExport(null);
+
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({ files:[file], title:"Diário de Treino" });
+      await markBackup(); return;
+    }
+    if(navigator.share){
+      await navigator.share({ title:"Diário de Treino", text:txt });
+      await markBackup(); return;
+    }
+  }catch(e){
+    if(e && e.name==="AbortError") return;   // cancelado pelo utilizador
+  }
+  doDownload();
+}
+
+function doDownload(){
+  const url = URL.createObjectURL(backupBlob());
+  const a = document.createElement("a");
+  a.href = url; a.download = "diario-treino-"+stamp()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  markBackup(); toast("Ficheiro guardado");
+}
+
+function daysSinceBackup(){
+  if(!DB.lastBackup) return null;
+  return Math.floor((Date.now()-new Date(DB.lastBackup))/86400000);
+}
+function checkBackup(){
+  const freq = DB.bkFreq===undefined ? 14 : DB.bkFreq;
+  const w=$("backupWarn");
+  if(!freq || DB.log.length===0){ w.classList.add("hide"); return; }
+  const d = daysSinceBackup();
+  if(d===null){
+    $("backupMsg").textContent = "Ainda não guardaste nenhuma cópia. Os registos existem só neste dispositivo.";
+    w.classList.remove("hide");
+  } else if(d>=freq){
+    $("backupMsg").textContent = "Última cópia há "+d+" dias. "+DB.log.length+" sessões registadas.";
+    w.classList.remove("hide");
+  } else {
+    w.classList.add("hide");
+  }
+}
+
+$("shareBtn").onclick = doShare;
+$("warnShare").onclick = doShare;
+$("dlBtn").onclick = doDownload;
+$("restoreBtn").onclick = ()=>$("restoreIn").click();
+$("restoreIn").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = async ()=>{
+    try{
+      const p = JSON.parse(r.result);
+      const d = p.data || p;
+      if(!d.log) throw new Error("formato");
+      if(!confirm("Substituir os registos atuais por "+d.log.length+" sessões do ficheiro?")) return;
+      DB = d; if(!DB.tm) DB.tm={};
+      await save(); render(); renderSet(); toast("Registos restaurados");
+    }catch(err){ toast("Ficheiro inválido"); }
+  };
+  r.readAsText(f);
+  e.target.value="";
+};
+$("bkFreq").onchange = async ()=>{ DB.bkFreq = parseInt($("bkFreq").value); await save(); render(); };
 
 function buildExport(n){
   const arr = n ? DB.log.slice(-n) : DB.log;
@@ -862,9 +1112,12 @@ function buildExport(n){
       if(l.notes) out += "Obs: "+l.notes+"\n";
       return;
     }
-    out += "Top set: "+(l.topTxt||"—")+"\n";
+    if(l.mainGrid) out += "Principal:\n"+gridTxt(l.mainGrid)+"\n";
+    else out += "Top set: "+(l.topTxt||"—")+"\n";
+    if(l.coc) out += "Captain of Crush:\n"+gridTxt(l.coc)+"\n";
     out += "Aquecimento: "+l.warm.length+" itens · "+(l.rounds||0)+" voltas\n";
     out += "Circuito:\n"+circTxt(l)+"\n";
+    out += "Pescoço: "+((l.neck&&l.neck.length)?l.neck.length+"/5":"não registado")+"\n";
     if(l.tags&&l.tags.length) out += "Marcadores: "+l.tags.join(", ")+"\n";
     if(l.notes) out += "Obs: "+l.notes+"\n";
   });
@@ -904,3 +1157,4 @@ load();
 </script>
 </body>
 </html>
+
