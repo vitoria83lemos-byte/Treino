@@ -243,6 +243,12 @@ textarea.exp{
   flex:1;text-align:center;font-size:9px;text-transform:uppercase;
   letter-spacing:.1em;color:var(--muted);font-weight:600
 }
+.shadow{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5C6878;
+  margin-left:26px;margin-bottom:6px;font-variant-numeric:tabular-nums;
+  display:flex;gap:6px;align-items:baseline
+}
+.shadow em{font-style:normal;color:#48545F;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em}
 .exb{padding:11px 0;border-top:1px solid var(--line)}
 .exb:first-child{border-top:none;padding-top:2px}
 .exh{display:flex;gap:9px;align-items:center;margin-bottom:8px}
@@ -376,7 +382,6 @@ textarea.exp{
     <div class="field"><label>Chin-up — peso adicionado (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmChin"></div>
     <div class="field"><label>Dip — peso adicionado (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmDip"></div>
     <div class="field"><label>Press vertical (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmPress"></div>
-    <div class="field"><label>Row horizontal (kg)</label><input class="inline-in" type="number" inputmode="decimal" id="tmRow"></div>
     <div class="field"><label>Captain of Crush — nível atual</label>
       <select class="inline-in" id="tmCoC">
         <option value="">—</option>
@@ -456,9 +461,9 @@ textarea.exp{
 
 <script>
 /* ══════════════ PROGRAMA ══════════════ */
-const WU_LEGS = ["Theragun","Air bike — 2 min","Short bridge, braço alternado","Shin box","Reverse plank","Band pull apart ×3","Pass through","KB hollow","Deep squat com KB","Pistol squats — esquerda 1º","Toes to bar"];
+const WU_LEGS = ["Theragun","Air bike — 2 min","Short bridge, braço alternado","Shin box","Reverse plank","Band pull apart ×3","Pass through","Mace","Deep squat com KB","Pistol squats — esquerda 1º","Toes to bar","Box jumps — 5, descer a pé"];
 const WU_DEAD = ["Theragun","Air bike — 2 min","Short bridge","Shin box","Reverse plank","Pass through","Band pull apart ×3","Seated good morning","Scapular pull-ups","Ring rows","Face pull","KB swings"];
-const WU_UPPER = ["Theragun","120 single unders","Table top","Reverse plank","Band pull apart ×3","Pass through","Dive bomber push-ups","KB hollow","Deep squat com KB","Scapular pull-ups","Scapular HSPU","Face pull (anéis)","Captain of Crush leve"];
+const WU_UPPER = ["Theragun","120 single unders","Table top","Reverse plank","Band pull apart ×3","Pass through","Dive bomber push-ups","Mace","Deep squat com KB","Scapular pull-ups","Scapular HSPU","Face pull (anéis)","Captain of Crush leve"];
 const WU_PRESS = WU_UPPER.concat(["Rotação externa com banda","Wall slides"]);
 
 const SESSIONS = [
@@ -468,22 +473,18 @@ const SESSIONS = [
 
   { id:"chin", name:"Chin-ups + Dips", warm:WU_UPPER,
     main:{type:"pair", lifts:[{label:"Chin-up",tm:"tmChin"},{label:"Dip",tm:"tmDip"}], top:100},
-    circuit:["Side plank rows (elástico)","Dumbbell pullover","Dumbbell bench press","Prone wrist curls","Reverse prone wrist curls"] },
+    circuit:["Dumbbell rows","Dumbbell pullover","Dumbbell bench press","Prone wrist curls","Reverse prone wrist curls"] },
 
   { id:"dead", name:"Peso Morto", warm:WU_DEAD,
     main:{type:"ramp", lift:"Peso morto", tm:"tmDead", pct:[50,60,70,80], reps:[5,5,3,3], top:90},
     circuit:["Reverse nordic curls","Front rack lunges","Ab wheel","Reverse hyper","Copenhagen hold","Suitcase carry"] },
 
-  { id:"press", name:"Press + Row", warm:WU_PRESS,
-    main:{type:"grid", items:[
-      {name:"Landmine press", tm:"tmPress"},
-      {name:"Row horizontal", tm:"tmRow"},
-      {name:"Captain of Crush", coc:true}
-    ]},
-    circuit:["Wall walks com hold","Face pulls com peso","Front lever rows (1 anel)","Pelican curls","Leg raises"] }
+  { id:"press", name:"Military Press", warm:WU_PRESS,
+    main:{type:"ramp", lift:"Military press", tm:"tmPress", pct:[50,60,70,80], reps:[5,5,3,3], top:90},
+    circuit:["Archer push-ups","Face pulls com peso","Tuck front lever rows (2 anéis)","Pelican curls","Leg raises"] }
 ];
 
-const NECK = ["Isométrico — flexão, 15 s","Isométrico — extensão, 15 s","Isométrico — lateral direita, 15 s","Isométrico — lateral esquerda, 15 s","Chin tucks — 3×10 lentos"];
+const NECK = ["Isométrico — flexão, 10 s","Isométrico — extensão, 10 s","Isométrico — lateral direita, 10 s","Isométrico — lateral esquerda, 10 s","Chin tucks — 3×10 lentos","Hang com uma mão — 10 s/lado"];
 
 const CARDIO = { id:"z2", name:"Zona 2 — Air Bike" };
 
@@ -747,11 +748,30 @@ function buildRampGrid(el, rows){
 /* Grelha genérica: peso + reps por volta. Usada no circuito,
    no circuito principal do dia 4 e no Captain of Crush. */
 function buildGrid(el, items, tagEl, onCount){
+  // procurar o último registo de cada estação
+  const lastOf = name=>{
+    for(let k=DB.log.length-1;k>=0;k--){
+      const prev = DB.log[k];
+      const pool = [].concat(prev.circData||[], prev.mainGrid||[], prev.coc||[]);
+      const hit = pool.find(x=>x.name===name && x.reps && x.reps.some(r=>r!==null));
+      if(hit) return {hit, date:prev.date};
+    }
+    return null;
+  };
+  const shadowTxt = p=>{
+    if(!p) return "";
+    const reps = p.hit.reps.filter(r=>r!==null).join("/");
+    const kg = (p.hit.kg!==null && p.hit.kg!==undefined && p.hit.kg!==0) ? fmt(p.hit.kg)+" kg · " : "";
+    const d = new Date(p.date).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit'});
+    return `<div class="shadow"><em>${d}</em><span>${kg}${reps}</span></div>`;
+  };
+
   el.innerHTML =
     `<div class="exlab"><span class="kg">Peso</span><span>V1</span><span>V2</span><span>V3</span><span>V4</span></div>`
     + items.map((c,i)=>`
       <div class="exb" data-i="${i}">
         <div class="exh"><span class="n mono">${String(i+1).padStart(2,'0')}</span><span class="exn">${c}</span></div>
+        ${shadowTxt(lastOf(c))}
         <div class="exg">
           <input class="cin kg" type="number" inputmode="decimal" step="0.5" placeholder="kg" data-i="${i}">
           ${[0,1,2,3].map(r=>`<input class="cin rp" type="number" inputmode="numeric" placeholder="—" data-i="${i}" data-r="${r}">`).join("")}
@@ -974,7 +994,7 @@ function renderHist(){
 
 /* ══════════════ DEFINIÇÕES ══════════════ */
 function renderSet(){
-  ["tmSquat","tmDead","tmChin","tmDip","tmPress","tmRow"].forEach(k=>$(k).value = DB.tm[k]||"");
+  ["tmSquat","tmDead","tmChin","tmDip","tmPress"].forEach(k=>$(k).value = DB.tm[k]||"");
   $("tmCoC").value = DB.tm.tmCoC || "";
   $("bkFreq").value = (DB.bkFreq===undefined?14:DB.bkFreq);
   const d = daysSinceBackup();
@@ -988,7 +1008,7 @@ function renderSet(){
   });
 }
 $("saveSet").onclick = async ()=>{
-  ["tmSquat","tmDead","tmChin","tmDip","tmPress","tmRow"].forEach(k=>DB.tm[k]=parseFloat($(k).value)||0);
+  ["tmSquat","tmDead","tmChin","tmDip","tmPress"].forEach(k=>DB.tm[k]=parseFloat($(k).value)||0);
   DB.tm.tmCoC = $("tmCoC").value;
   await save(); render(); toast("Máximos guardados");
 };
@@ -1157,5 +1177,3 @@ load();
 </script>
 </body>
 </html>
-
-
