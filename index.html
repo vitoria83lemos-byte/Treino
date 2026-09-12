@@ -481,7 +481,7 @@ const SESSIONS = [
 
   { id:"press", name:"Military Press", warm:WU_PRESS,
     main:{type:"ramp", lift:"Military press", tm:"tmPress", pct:[50,60,70,80], reps:[5,5,3,3], top:90},
-    circuit:["Archer push-ups","Face pulls com peso","Tuck front lever rows (2 anéis)","Pelican curls","Leg raises"] }
+    circuit:["Archer push-ups","Face pulls com peso","Tuck front lever rows (2 anéis)","Pelican curls","Elevações laterais","Leg raises"] }
 ];
 
 const NECK = ["Isométrico — flexão, 10 s","Isométrico — extensão, 10 s","Isométrico — lateral direita, 10 s","Isométrico — lateral esquerda, 10 s","Chin tucks — 3×10 lentos","Hang com uma mão — 10 s/lado"];
@@ -975,7 +975,7 @@ function renderHist(){
     }
     const head = l.mainGrid ? "PRINCIPAL\n"+gridTxt(l.mainGrid) : "Top set: "+l.topTxt;
     const coc = l.coc ? "\n\nCAPTAIN OF CRUSH\n"+gridTxt(l.coc) : "";
-    const nk = "\n\nPescoço: "+((l.neck&&l.neck.length)?l.neck.length+"/5":"não registado");
+    const nk = "\n\nPescoço: "+((l.neck&&l.neck.length)?l.neck.length+"/"+NECK.length:"não registado");
     alert(`${l.name}\n${new Date(l.date).toLocaleDateString('pt-PT',{dateStyle:'long'})}\n\n${head}${coc}\n\nCIRCUITO\n${circTxt(l)}${nk}${tg}\n\n${l.notes||"(sem observações)"}`);
   });
 
@@ -1137,7 +1137,7 @@ function buildExport(n){
     if(l.coc) out += "Captain of Crush:\n"+gridTxt(l.coc)+"\n";
     out += "Aquecimento: "+l.warm.length+" itens · "+(l.rounds||0)+" voltas\n";
     out += "Circuito:\n"+circTxt(l)+"\n";
-    out += "Pescoço: "+((l.neck&&l.neck.length)?l.neck.length+"/5":"não registado")+"\n";
+    out += "Pescoço: "+((l.neck&&l.neck.length)?l.neck.length+"/"+NECK.length:"não registado")+"\n";
     if(l.tags&&l.tags.length) out += "Marcadores: "+l.tags.join(", ")+"\n";
     if(l.notes) out += "Obs: "+l.notes+"\n";
   });
@@ -1177,3 +1177,4 @@ load();
 </script>
 </body>
 </html>
+
