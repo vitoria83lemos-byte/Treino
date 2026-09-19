@@ -473,7 +473,7 @@ const SESSIONS = [
 
   { id:"chin", name:"Chin-ups + Dips", warm:WU_UPPER,
     main:{type:"pair", lifts:[{label:"Chin-up",tm:"tmChin"},{label:"Dip",tm:"tmDip"}], top:100},
-    circuit:["Renegade rows","Dumbbell pullover","Turkish get-up","Prone wrist curls","Reverse prone wrist curls"] },
+    circuit:["Renegade rows","Dumbbell pullover","Turkish get-up","Prone wrist curls","Reverse prone wrist curls","Wrist deviation (KB no banco)"] },
 
   { id:"dead", name:"Peso Morto", warm:WU_DEAD,
     main:{type:"ramp", lift:"Peso morto", tm:"tmDead", pct:[50,60,70,80], reps:[5,5,3,3], top:90},
@@ -683,6 +683,14 @@ function beginCardio(){
   hint.textContent="No fim, não no início — à frente degradaria a qualidade do bloco contínuo.";
   s.appendChild(hint);
   box.appendChild(s);
+
+  // Captain of Crush — volume submáximo no fim da sessão
+  const g=document.createElement("div"); g.className="card";
+  g.innerHTML=`<div class="eyebrow">Captain of Crush — volume${DB.tm.tmCoC?" · um nível abaixo de "+DB.tm.tmCoC:""}</div>
+    <p class="note" style="margin:0 0 12px">Séries de 3-5 fechos completos, sempre com margem. Nunca à falha.</p>
+    <div id="cocEl"></div>`;
+  box.appendChild(g);
+  cur.collectCoC = buildGrid($("cocEl"), ["Captain of Crush — esquerda","Captain of Crush — direita"], null);
 
   setDateField(); initNotes();
   view("session");
@@ -915,6 +923,8 @@ $("saveBtn").onclick = async ()=>{
   if(cur.cardio){
     cur.date = readDateField();
     cur.notes = nt.notes; cur.tags = nt.tags;
+    cur.coc = cur.collectCoC ? cur.collectCoC() : null;
+    delete cur.collectCoC;
     cur.topTxt = cur.min+" min" + (cur.sprints ? " + "+cur.sprintMin+" int." : "");
     DB.log.push(cur);
     DB.log.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -970,7 +980,8 @@ function renderHist(){
     const l = DB.log[+row.dataset.i];
     const tg = (l.tags&&l.tags.length) ? "\nMarcadores: "+l.tags.join(", ") : "";
     if(l.cardio){
-      alert(`${l.name}\n${new Date(l.date).toLocaleDateString('pt-PT',{dateStyle:'long'})}\n\nContínuo: ${l.min} min\nBloco de intensidade: ${l.sprints?l.sprintMin+" min (no fim)":"não"}${tg}\n\n${l.notes||"(sem observações)"}`);
+      const zcoc = l.coc ? "\n\nCAPTAIN OF CRUSH\n"+gridTxt(l.coc) : "";
+      alert(`${l.name}\n${new Date(l.date).toLocaleDateString('pt-PT',{dateStyle:'long'})}\n\nContínuo: ${l.min} min\nBloco de intensidade: ${l.sprints?l.sprintMin+" min (no fim)":"não"}${zcoc}${tg}\n\n${l.notes||"(sem observações)"}`);
       return;
     }
     const head = l.mainGrid ? "PRINCIPAL\n"+gridTxt(l.mainGrid) : "Top set: "+l.topTxt;
@@ -1128,6 +1139,7 @@ function buildExport(n){
     out += new Date(l.date).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'})+"  "+l.name.toUpperCase()+"\n";
     if(l.cardio){
       out += "Contínuo: "+l.min+" min · Intensidade final: "+(l.sprints?l.sprintMin+" min":"não")+"\n";
+      if(l.coc) out += "Captain of Crush:\n"+gridTxt(l.coc)+"\n";
       if(l.tags&&l.tags.length) out += "Marcadores: "+l.tags.join(", ")+"\n";
       if(l.notes) out += "Obs: "+l.notes+"\n";
       return;
@@ -1177,4 +1189,5 @@ load();
 </script>
 </body>
 </html>
+
 
